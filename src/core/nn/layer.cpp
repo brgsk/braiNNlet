@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 Layer::Layer(int numNeurons, int numInputs) : _numNeurons(numNeurons), _numInputs(numInputs) {
-    std::cout << "Layer: " << _numNeurons << " neurons, " << _numInputs << " inputs" << std::endl;
     initializeWeights();
 }
 
@@ -28,7 +27,7 @@ void Layer::initializeWeights() {
 }
 
 void Layer::printLayer() {
-    std::cout << "Layer " << _numNeurons << " neurons, " << _numInputs << " inputs" << std::endl;
+    std::cout << "Layer shape: [" << _numInputs << " x " << _numNeurons << "]" << std::endl;
     std::cout << "Weights:\n" << _weights.getData() << std::endl;
     std::cout << "Biases:\n" << _biases.getData() << std::endl;
 }
@@ -39,26 +38,20 @@ Tensor Layer::forward(const Tensor& input) {
     // weights shape: (numInputs, numNeurons) 
     // output shape: (batch_size, numNeurons) or (1, numNeurons)
     
-    const Matrix& inputData = input.getData();
-    const Matrix& weightsData = _weights.getData();
-    const Matrix& biasesData = _biases.getData();
-    
     // Validate dimensions
-    if (inputData.cols() != _numInputs) {
+    if (input.cols() != _numInputs) {
         throw std::invalid_argument("Input dimension mismatch: expected " + 
                                   std::to_string(_numInputs) + 
-                                  " but got " + std::to_string(inputData.cols()));
+                                  " but got " + std::to_string(input.cols()));
     }
     
     // Matrix multiplication: input * weights
-    Matrix output = inputData * weightsData;
+    Tensor output = input.matmul(_weights);
     
-    // Add biases (broadcasting)
-    for (int i = 0; i < output.rows(); ++i) {
-        output.row(i) += biasesData.row(0);
-    }
+    // Add biases using broadcasting
+    output = output.broadcast_add(_biases);
     
-    return Tensor(output);
+    return output;
 }
 
 void Layer::backward(Tensor& gradient) {

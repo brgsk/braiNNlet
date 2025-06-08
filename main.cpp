@@ -30,14 +30,64 @@ int main() {
     Tensor result = tensor2 + tensor;
     result.printTensor();
 
-    printf("\nMultiply tensor2 and tensor...\n");
-    Tensor result2 = tensor2 * tensor;
+    printf("\nHadamard (element-wise) multiply tensor2 and tensor...\n");
+    Tensor result2 = tensor2.hadamard(tensor);
     result2.printTensor();
 
     printf("\nDivide tensor2 by 2...\n");
     tensor2 /= 2;
     tensor2.printTensor();
 
+    printf("\n=== Testing New Tensor Operations ===\n");
+    
+    // Test matrix multiplication
+    printf("\nTesting matrix multiplication...\n");
+    Matrix a(2, 3);
+    a << 1, 2, 3,
+         4, 5, 6;
+    Matrix b(3, 2);
+    b << 1, 2,
+         3, 4,
+         5, 6;
+    
+    Tensor ta(a);
+    Tensor tb(b);
+    
+    printf("Matrix A:\n");
+    ta.printTensor();
+    printf("Matrix B:\n");
+    tb.printTensor();
+    
+    Tensor matmul_result = ta.matmul(tb);
+    printf("A * B (matrix multiplication):\n");
+    matmul_result.printTensor();
+    
+    // Test transpose
+    printf("\nTranspose of A:\n");
+    Tensor transposed = ta.transpose();
+    transposed.printTensor();
+    
+    // Test broadcasting
+    printf("\nTesting broadcasting (bias addition)...\n");
+    Matrix data(2, 3);
+    data << 1, 2, 3,
+            4, 5, 6;
+    Matrix bias(1, 3);
+    bias << 10, 20, 30;
+    
+    Tensor t_data(data);
+    Tensor t_bias(bias);
+    
+    printf("Data:\n");
+    t_data.printTensor();
+    printf("Bias:\n");
+    t_bias.printTensor();
+    
+    Tensor broadcast_result = t_data.broadcast_add(t_bias);
+    printf("Data + Bias (broadcast):\n");
+    broadcast_result.printTensor();
+
+    printf("\n=== Neural Network Layer Testing ===\n");
     printf("\nCreate layer...\n");
     Layer layer(3, 4);  // 3 neurons, 4 inputs
     layer.printLayer();

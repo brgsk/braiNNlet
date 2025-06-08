@@ -4,7 +4,7 @@ A lightweight C++ neural network library built from scratch using Eigen for line
 
 ## Features
 
-- **Comprehensive Tensor Operations**: 
+- **Comprehensive Tensor Operations**:
   - Element-wise operations (add, subtract, hadamard product, divide)
   - Matrix operations (matrix multiplication, transpose)
   - Broadcasting for bias addition
@@ -42,12 +42,14 @@ braiNNlet/
 ## Building
 
 1. Clone the repository:
+
 ```bash
 git clone git@github.com:brgsk/braiNNlet.git
 cd braiNNlet
 ```
 
 2. Create build directory and compile:
+
 ```bash
 mkdir build
 cd build
@@ -56,11 +58,13 @@ make
 ```
 
 3. Run the main example:
+
 ```bash
 ./main
 ```
 
 4. Run tests:
+
 ```bash
 ./test
 ```
@@ -134,6 +138,7 @@ Tensor batchOutput = layer.forward(batchInput);
 ## Current Implementation Status
 
 ### ✅ Fully Implemented
+
 - **Tensor Operations**:
   - Element-wise arithmetic (add, subtract, divide, hadamard product)
   - Matrix multiplication and transpose
@@ -147,11 +152,12 @@ Tensor batchOutput = layer.forward(batchInput);
   - Xavier/Glorot weight initialization
   - Forward pass with matrix multiplication and bias addition
   - Batch processing support
-- **Memory Management**: 
+- **Memory Management**:
   - Proper move semantics and copy operations
   - Exception safety and error handling
 
 ### 🚧 In Development
+
 - Backward pass (gradient computation)
 - Activation functions (ReLU, Sigmoid, Softmax, etc.)
 - Loss functions (MSE, Cross-entropy)
@@ -159,6 +165,7 @@ Tensor batchOutput = layer.forward(batchInput);
 - Multi-layer network class
 
 ### 📋 Planned Features
+
 - Convolutional layers
 - Recurrent layers (LSTM, GRU)
 - Model serialization/deserialization
@@ -168,6 +175,7 @@ Tensor batchOutput = layer.forward(batchInput);
 ## Testing
 
 The project includes comprehensive tests covering:
+
 - Tensor creation and initialization
 - All mathematical operations
 - Matrix operations and broadcasting
@@ -176,10 +184,11 @@ The project includes comprehensive tests covering:
 - Neural network layer functionality
 
 Run tests with:
+
 ```bash
 ./test
 ```
 
 ## Author
 
-Bartosz Roguski 
+Bartosz Roguski

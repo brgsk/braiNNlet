@@ -1,124 +1,116 @@
-//
-// Created by Bartosz Roguski on 07/06/2025.
-//
+#include <iostream>
+
+#include "src/core/nn/dense_layer.hpp"
 #include "src/core/nn/tensor.hpp"
-#include "src/core/nn/layer.hpp"
-#include <random>
 
 int main() {
-    printf("\nCreate tensor...\n");
-    Tensor tensor(10, 10, 10);
-    tensor.printTensor();
+    std::cout << "\nCreate tensor..." << std::endl;
+    Tensor tensor(10, 10);
+    std::cout << tensor << std::endl;
 
-    printf("\nUpdate tensor...\n");
-    tensor.updateTensor(Matrix::Ones(10, 10));
-    tensor.printTensor();
+    std::cout << "\nUpdate tensor..." << std::endl;
+    tensor.data() = Matrix::Ones(10, 10);
+    std::cout << tensor << std::endl;
 
-    printf("\nCreate tensor2 from Matrix...\n");
+    std::cout << "\nCreate tensor2 from Matrix..." << std::endl;
     Tensor tensor2(Matrix::Zero(10, 10));
-    tensor2.printTensor();
+    std::cout << tensor2 << std::endl;
 
-    printf("\nUpdate tensor2...\n");
-    tensor2.updateTensor(Matrix::Ones(10, 10));
-    tensor2.printTensor();
+    std::cout << "\nUpdate tensor2..." << std::endl;
+    tensor2.data() = Matrix::Ones(10, 10);
+    std::cout << tensor2 << std::endl;
 
-    printf("\nMultiply tensor2 by 2...\n");
+    std::cout << "\nMultiply tensor2 by 2..." << std::endl;
     tensor2 *= 2;
-    tensor2.printTensor();
+    std::cout << tensor2 << std::endl;
 
-    printf("\nAdd tensor2 and tensor...\n");
+    std::cout << "\nAdd tensor2 and tensor..." << std::endl;
     Tensor result = tensor2 + tensor;
-    result.printTensor();
+    std::cout << result << std::endl;
 
-    printf("\nHadamard (element-wise) multiply tensor2 and tensor...\n");
+    std::cout << "\nHadamard (element-wise) multiply tensor2 and tensor..." << std::endl;
     Tensor result2 = tensor2.hadamard(tensor);
-    result2.printTensor();
+    std::cout << result2 << std::endl;
 
-    printf("\nDivide tensor2 by 2...\n");
+    std::cout << "\nDivide tensor2 by 2..." << std::endl;
     tensor2 /= 2;
-    tensor2.printTensor();
+    std::cout << tensor2 << std::endl;
 
-    printf("\n=== Testing New Tensor Operations ===\n");
-    
+    std::cout << "\n=== Testing New Tensor Operations ===" << std::endl;
+
     // Test matrix multiplication
-    printf("\nTesting matrix multiplication...\n");
+    std::cout << "\nTesting matrix multiplication..." << std::endl;
     Matrix a(2, 3);
-    a << 1, 2, 3,
-         4, 5, 6;
+    a << 1, 2, 3, 4, 5, 6;
     Matrix b(3, 2);
-    b << 1, 2,
-         3, 4,
-         5, 6;
-    
+    b << 1, 2, 3, 4, 5, 6;
+
     Tensor ta(a);
     Tensor tb(b);
-    
-    printf("Matrix A:\n");
-    ta.printTensor();
-    printf("Matrix B:\n");
-    tb.printTensor();
-    
-    Tensor matmul_result = ta.matmul(tb);
-    printf("A * B (matrix multiplication):\n");
-    matmul_result.printTensor();
-    
+
+    std::cout << "Matrix A:" << std::endl;
+    std::cout << ta << std::endl;
+    std::cout << "Matrix B:" << std::endl;
+    std::cout << tb << std::endl;
+
+    Tensor matmul_result = ta * tb;
+    std::cout << "A * B (matrix multiplication):" << std::endl;
+    std::cout << matmul_result << std::endl;
+
     // Test transpose
-    printf("\nTranspose of A:\n");
+    std::cout << "\nTranspose of A:" << std::endl;
     Tensor transposed = ta.transpose();
-    transposed.printTensor();
-    
+    std::cout << transposed << std::endl;
+
     // Test broadcasting
-    printf("\nTesting broadcasting (bias addition)...\n");
+    std::cout << "\nTesting broadcasting (bias addition)..." << std::endl;
     Matrix data(2, 3);
-    data << 1, 2, 3,
-            4, 5, 6;
+    data << 1, 2, 3, 4, 5, 6;
     Matrix bias(1, 3);
     bias << 10, 20, 30;
-    
+
     Tensor t_data(data);
     Tensor t_bias(bias);
-    
-    printf("Data:\n");
-    t_data.printTensor();
-    printf("Bias:\n");
-    t_bias.printTensor();
-    
+
+    std::cout << "Data:" << std::endl;
+    std::cout << t_data << std::endl;
+    std::cout << "Bias:" << std::endl;
+    std::cout << t_bias << std::endl;
+
     Tensor broadcast_result = t_data.broadcast_add(t_bias);
-    printf("Data + Bias (broadcast):\n");
-    broadcast_result.printTensor();
+    std::cout << "Data + Bias (broadcast):" << std::endl;
+    std::cout << broadcast_result << std::endl;
 
-    printf("\n=== Neural Network Layer Testing ===\n");
-    printf("\nCreate layer...\n");
-    Layer layer(3, 4);  // 3 neurons, 4 inputs
-    layer.printLayer();
+    std::cout << "\n=== Neural Network Layer Testing ===" << std::endl;
+    std::cout << "\nCreate dense layer..." << std::endl;
+    DenseLayer layer(4, 3);  // 4 inputs, 3 outputs
 
-    printf("\nTesting forward pass...\n");
+    std::cout << "\nTesting forward pass..." << std::endl;
     // Create input tensor (1 sample, 4 features)
     Matrix inputMatrix(1, 4);
     inputMatrix << 1.0, 2.0, 3.0, 4.0;
     Tensor input(inputMatrix);
-    
-    printf("Input:\n");
-    input.printTensor();
-    
+
+    std::cout << "Input:" << std::endl;
+    std::cout << input << std::endl;
+
     // Forward pass
     Tensor output = layer.forward(input);
-    printf("Output after forward pass:\n");
-    output.printTensor();
+    std::cout << "Output after forward pass:" << std::endl;
+    std::cout << output << std::endl;
 
     // Test with batch of inputs (2 samples, 4 features each)
-    printf("\nTesting batch forward pass...\n");
+    std::cout << "\nTesting batch forward pass..." << std::endl;
     Matrix batchMatrix(2, 4);
-    batchMatrix << 1.0, 2.0, 3.0, 4.0,
-                   5.0, 6.0, 7.0, 8.0;
+    batchMatrix << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0;
     Tensor batchInput(batchMatrix);
-    
-    printf("Batch input:\n");
-    batchInput.printTensor();
-    
+
+    std::cout << "Batch input:" << std::endl;
+    std::cout << batchInput << std::endl;
+
     Tensor batchOutput = layer.forward(batchInput);
-    printf("Batch output after forward pass:\n");
-    batchOutput.printTensor();
+    std::cout << "Batch output after forward pass:" << std::endl;
+    std::cout << batchOutput << std::endl;
 
     return 0;
 }

@@ -1,0 +1,11 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -2
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BinPackParameters: false
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+ReferenceAlignment: Left

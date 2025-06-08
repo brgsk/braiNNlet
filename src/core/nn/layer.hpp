@@ -1,32 +1,43 @@
 #pragma once
 
-#include <vector>
-#include <iostream>
-#include <random>
+#include <memory>
+#include <string>
 
 #include "tensor.hpp"
 
 class Layer {
-public:
-    Layer(int numNeurons, int numInputs);
-    ~Layer() = default;
+  public:
+    virtual ~Layer() = default;
+
+    // Pure virtual methods that must be implemented by subclasses
+    virtual Tensor forward(const Tensor& input) = 0;
+    virtual Tensor backward(const Tensor& gradient) = 0;
+
+    // Optional overrides
+    virtual void update_weights(double learning_rate) {}
+    virtual void zero_gradients() {}
 
     // Getters
-    int getNumNeurons() const { return numNeurons_; }
-    int getNumInputs() const { return numInputs_; }
-    const Tensor& getWeights() const { return weights_; }
-    const Tensor& getBiases() const { return biases_; }
+    virtual std::string name() const = 0;
+    virtual int input_size() const = 0;
+    virtual int output_size() const = 0;
+    virtual bool has_parameters() const {
+        return false;
+    }
 
-    // Other methods
-    void printLayer();
-    Tensor forward(const Tensor& input);
-    void backward(Tensor& gradient);
+    // Serialization and configuration
+    virtual void set_training(bool training) {
+        training_ = training;
+    }
+    virtual bool is_training() const {
+        return training_;
+    }
 
-private:
-    void initializeWeights();
-    
-    int numNeurons_;
-    int numInputs_;
-    Tensor weights_;  // Shape: (numInputs, numNeurons)
-    Tensor biases_;   // Shape: (1, numNeurons)
+    // Network topology visualization
+    virtual int parameter_count() const {
+        return 0;
+    }
+
+  private:
+    bool training_ = true;
 };

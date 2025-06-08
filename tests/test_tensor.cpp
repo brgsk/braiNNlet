@@ -225,8 +225,9 @@ void testScalarOperations() {
     printf("✓ Compound division test passed\n");
 }
 
-int main() {
+int runTensorTests() {
     try {
+        printf("=== TENSOR TESTS ===\n");
         testTensorCreation();
         testElementAccess();
         testTensorOperations();
@@ -236,10 +237,10 @@ int main() {
         testFunctionApplication();
         testReshape();
         testScalarOperations();
-        printf("\n✅ All tests passed!\n");
+        printf("✅ All tensor tests passed!\n\n");
+        return 0;
     } catch (const std::exception& e) {
-        printf("\n❌ Test failed: %s\n", e.what());
+        printf("❌ Tensor test failed: %s\n", e.what());
         return 1;
     }
-    return 0;
 }

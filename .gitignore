@@ -24,7 +24,7 @@ cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-Makefile
+
 
 # System files
 .DS_Store

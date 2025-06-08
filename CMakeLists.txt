@@ -1,50 +1,68 @@
-cmake_minimum_required(VERSION 3.20)
-project(braiNNlet VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.16)
+project(braiNNlet)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Use FetchContent to automatically download Eigen3
-include(FetchContent)
+# Find Eigen3
+find_package(Eigen3 REQUIRED)
 
-FetchContent_Declare(
-    Eigen3
-    GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-    GIT_TAG 3.4.0
+# Library sources
+set(LIB_SOURCES
+    src/core/nn/tensor.cpp
+    src/core/nn/dense_layer.cpp
+    src/core/nn/activations.cpp
+    src/core/nn/loss.cpp
+    src/core/nn/layer.cpp
+    src/core/nn/network.cpp
+    src/core/data/Dataset.cpp
+    src/core/data/MnistLoader.cpp
+    src/core/training/Trainer.cpp
 )
 
-FetchContent_MakeAvailable(Eigen3)
+# Create the neural network library
+add_library(braiNNlet_lib ${LIB_SOURCES})
+target_include_directories(braiNNlet_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(braiNNlet_lib Eigen3::Eigen)
 
-# Collect library source files (exclude test files)
-file(GLOB_RECURSE LIB_SOURCES "src/**/*.cpp" "src/**/*.hpp")
-
-# Create the library
-add_library(braiNNlet STATIC ${LIB_SOURCES})
-
-# Link Eigen3 to the library
-target_link_libraries(braiNNlet PUBLIC Eigen3::Eigen)
-
-# Set include directories
-target_include_directories(braiNNlet PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+# CLI application sources
+set(CLI_SOURCES
+    src/cli/main.cpp
+    src/cli/utils/cli_utils.cpp
+    src/cli/utils/config_manager.cpp
+    src/cli/commands/create_command.cpp
+    src/cli/commands/train_command.cpp
+    src/cli/commands/eval_command.cpp
+    src/cli/commands/data_command.cpp
+    src/cli/interfaces/interactive_mode.cpp
 )
 
-# Collect all test source files
-file(GLOB TEST_SOURCES 
-    "tests/test_main.cpp"
-    "tests/test_tensor.cpp" 
-    "tests/test_activations.cpp"
-    "tests/test_loss.cpp"
-    "tests/test_dense_layer.cpp"
-    "tests/test_backpropagation.cpp"
+# Create the CLI executable
+add_executable(braiNNlet-cli ${CLI_SOURCES})
+target_include_directories(braiNNlet-cli PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(braiNNlet-cli braiNNlet_lib Eigen3::Eigen)
+
+# Main demo executable
+add_executable(braiNNlet main.cpp)
+target_include_directories(braiNNlet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(braiNNlet braiNNlet_lib Eigen3::Eigen)
+
+# Debug MNIST executable
+add_executable(debug_mnist debug_mnist.cpp)
+target_include_directories(debug_mnist PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(debug_mnist braiNNlet_lib Eigen3::Eigen)
+
+# Test sources
+set(TEST_SOURCES
+    tests/main.test.cpp
+    tests/tensor.test.cpp
+    tests/activations.test.cpp
+    tests/loss.test.cpp
+    tests/dense_layer.test.cpp
+    tests/backpropagation.test.cpp
 )
 
-# Create the test executable
-add_executable(test ${TEST_SOURCES})
-target_link_libraries(test braiNNlet)
-
-# Create the main executable
-add_executable(main main.cpp)
-
-target_link_libraries(main braiNNlet)
+# Create test executable
+add_executable(test_braiNNlet ${TEST_SOURCES})
+target_include_directories(test_braiNNlet PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_braiNNlet braiNNlet_lib Eigen3::Eigen)

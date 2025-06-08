@@ -26,8 +26,7 @@ braiNNlet/
 │   └── core/
 │       └── nn/
 │           ├── tensor.hpp/cpp    # Tensor data structure and operations
-│           ├── layer.hpp/cpp     # Neural network layer implementation
-│           └── neuron.hpp/cpp    # Individual neuron implementation
+│           └── layer.hpp/cpp     # Neural network layer implementation
 ├── tests/
 │   └── test.cpp                  # Comprehensive unit tests
 ├── CMakeLists.txt               # Build configuration

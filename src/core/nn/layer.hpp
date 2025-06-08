@@ -12,10 +12,10 @@ public:
     ~Layer() = default;
 
     // Getters
-    int getNumNeurons() const { return _numNeurons; }
-    int getNumInputs() const { return _numInputs; }
-    const Tensor& getWeights() const { return _weights; }
-    const Tensor& getBiases() const { return _biases; }
+    int getNumNeurons() const { return numNeurons_; }
+    int getNumInputs() const { return numInputs_; }
+    const Tensor& getWeights() const { return weights_; }
+    const Tensor& getBiases() const { return biases_; }
 
     // Other methods
     void printLayer();
@@ -25,8 +25,8 @@ public:
 private:
     void initializeWeights();
     
-    int _numNeurons;
-    int _numInputs;
-    Tensor _weights;  // Shape: (numInputs, numNeurons)
-    Tensor _biases;   // Shape: (1, numNeurons)
+    int numNeurons_;
+    int numInputs_;
+    Tensor weights_;  // Shape: (numInputs, numNeurons)
+    Tensor biases_;   // Shape: (1, numNeurons)
 };

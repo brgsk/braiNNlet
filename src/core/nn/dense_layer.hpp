@@ -39,6 +39,12 @@ class DenseLayer : public Layer {
     const Tensor& biases() const {
         return biases_;
     }
+    const Tensor& weight_gradients() const {
+        return weight_grad_;
+    }
+    const Tensor& bias_gradients() const {
+        return bias_grad_;
+    }
     void set_weights(const Tensor& weights);
     void set_biases(const Tensor& biases);
 

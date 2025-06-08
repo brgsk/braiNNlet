@@ -5,7 +5,8 @@
 #include <stdexcept>
 
 // ReLU Implementation
-Tensor ReLU::forward(const Tensor& input) const {
+Tensor ReLU::forward(const Tensor& input) {
+    last_input_ = input;  // Store for backward pass
     Tensor output(input.rows(), input.cols());
     for (int i = 0; i < input.rows(); i++) {
         for (int j = 0; j < input.cols(); j++) {
@@ -15,22 +16,20 @@ Tensor ReLU::forward(const Tensor& input) const {
     return output;
 }
 
-Tensor ReLU::backward(const Tensor& gradient) const {
+Tensor ReLU::backward(const Tensor& gradient) {
     // For ReLU: gradient * (input > 0 ? 1 : 0)
-    // Note: We need the original input, but we'll approximate using gradient
-    // In a proper implementation, we'd store the input from forward pass
     Tensor output(gradient.rows(), gradient.cols());
     for (int i = 0; i < gradient.rows(); i++) {
         for (int j = 0; j < gradient.cols(); j++) {
-            // This is a simplified version - in practice you'd store forward input
-            output(i, j) = gradient(i, j) > 0 ? gradient(i, j) : 0;
+            output(i, j) = last_input_(i, j) > 0 ? gradient(i, j) : 0;
         }
     }
     return output;
 }
 
 // Sigmoid Implementation
-Tensor Sigmoid::forward(const Tensor& input) const {
+Tensor Sigmoid::forward(const Tensor& input) {
+    last_input_ = input;  // Store for backward pass
     Tensor output(input.rows(), input.cols());
     for (int i = 0; i < input.rows(); i++) {
         for (int j = 0; j < input.cols(); j++) {
@@ -41,14 +40,13 @@ Tensor Sigmoid::forward(const Tensor& input) const {
     return output;
 }
 
-Tensor Sigmoid::backward(const Tensor& gradient) const {
+Tensor Sigmoid::backward(const Tensor& gradient) {
     // For sigmoid: gradient * sigmoid(x) * (1 - sigmoid(x))
-    // Note: Proper implementation would store forward output
     Tensor output(gradient.rows(), gradient.cols());
     for (int i = 0; i < gradient.rows(); i++) {
         for (int j = 0; j < gradient.cols(); j++) {
-            // Simplified - assumes gradient contains sigmoid output
-            double s = gradient(i, j);
+            double x = std::max(-500.0, std::min(500.0, last_input_(i, j)));
+            double s = 1.0 / (1.0 + std::exp(-x));
             output(i, j) = gradient(i, j) * s * (1 - s);
         }
     }
@@ -56,7 +54,8 @@ Tensor Sigmoid::backward(const Tensor& gradient) const {
 }
 
 // Tanh Implementation
-Tensor Tanh::forward(const Tensor& input) const {
+Tensor Tanh::forward(const Tensor& input) {
+    last_input_ = input;  // Store for backward pass
     Tensor output(input.rows(), input.cols());
     for (int i = 0; i < input.rows(); i++) {
         for (int j = 0; j < input.cols(); j++) {
@@ -66,14 +65,12 @@ Tensor Tanh::forward(const Tensor& input) const {
     return output;
 }
 
-Tensor Tanh::backward(const Tensor& gradient) const {
+Tensor Tanh::backward(const Tensor& gradient) {
     // For tanh: gradient * (1 - tanh(x)^2)
-    // Note: Proper implementation would store forward output
     Tensor output(gradient.rows(), gradient.cols());
     for (int i = 0; i < gradient.rows(); i++) {
         for (int j = 0; j < gradient.cols(); j++) {
-            // Simplified - assumes gradient contains tanh output
-            double t = gradient(i, j);
+            double t = std::tanh(last_input_(i, j));
             output(i, j) = gradient(i, j) * (1 - t * t);
         }
     }
@@ -81,11 +78,12 @@ Tensor Tanh::backward(const Tensor& gradient) const {
 }
 
 // Linear Implementation
-Tensor Linear::forward(const Tensor& input) const {
+Tensor Linear::forward(const Tensor& input) {
+    last_input_ = input;  // Store for backward pass (though not needed for linear)
     return input;
 }
 
-Tensor Linear::backward(const Tensor& gradient) const {
+Tensor Linear::backward(const Tensor& gradient) {
     // For linear activation: gradient * 1 = gradient (pass through)
     return gradient;
 }
@@ -107,13 +105,13 @@ std::unique_ptr<ActivationFunction> create_activation(ActivationType type) {
 }
 
 ActivationType activation_from_string(const std::string& name) {
-    if (name == "ReLU")
+    if (name == "ReLU" || name == "relu")
         return ActivationType::ReLU;
-    if (name == "Sigmoid")
+    if (name == "Sigmoid" || name == "sigmoid")
         return ActivationType::Sigmoid;
-    if (name == "Tanh")
+    if (name == "Tanh" || name == "tanh")
         return ActivationType::Tanh;
-    if (name == "Linear")
+    if (name == "Linear" || name == "linear")
         return ActivationType::Linear;
     throw std::invalid_argument("Unknown activation function " + name);
 }

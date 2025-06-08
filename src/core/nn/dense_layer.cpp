@@ -13,11 +13,16 @@ DenseLayer::DenseLayer(int input_size, int output_size, ActivationType activatio
       weight_grad_(input_size, output_size),
       bias_grad_(1, output_size),
       activation_(create_activation(activation)) {
-    // Initialize with Xavier/Glorot initialization
+    // Initialize weights and biases
     xavier_init();
+    biases_.zero();
+    zero_gradients();
 }
 
 Tensor DenseLayer::forward(const Tensor& input) {
+    if (input.cols() != input_size_) {
+        throw std::invalid_argument("Input size mismatch in DenseLayer");
+    }
     // Store input for backward pass (if training)
     if (training_) {
         last_input_ = input;
@@ -46,6 +51,9 @@ Tensor DenseLayer::forward(const Tensor& input) {
 }
 
 Tensor DenseLayer::backward(const Tensor& gradient) {
+    if (gradient.cols() != output_size_) {
+        throw std::invalid_argument("Gradient size mismatch in DenseLayer");
+    }
     if (!training_) {
         throw std::runtime_error("Cannot call backward during inference mode");
     }
@@ -53,12 +61,14 @@ Tensor DenseLayer::backward(const Tensor& gradient) {
     // Backward through activation function
     Tensor activation_grad = activation_->backward(gradient);
 
-    // Compute gradients for weights and biases
-    // weight_grad = last_input_.T * activation_grad
-    weight_grad_ = last_input_.transpose() * activation_grad;
+    // Compute gradients for weights and biases (average over batch)
+    const int batch_size = last_input_.rows();
 
-    // bias_grad = sum(activation_grad, axis=0)
-    bias_grad_ = activation_grad.sum(0);
+    // weight_grad = (X^T · δ) / batch_size
+    weight_grad_ = (last_input_.transpose() * activation_grad) / static_cast<double>(batch_size);
+
+    // bias_grad = sum(δ, axis=0) / batch_size
+    bias_grad_ = activation_grad.sum(0) / static_cast<double>(batch_size);
 
     // Compute gradient for input (to pass to previous layer)
     // input_grad = activation_grad * weights_.T

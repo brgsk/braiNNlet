@@ -15,11 +15,11 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Eigen3)
 
-# Collect all source files
-file(GLOB_RECURSE SOURCES "tests/test.cpp" "src/**/*.cpp" "src/**/*.hpp")
+# Collect library source files (exclude test files)
+file(GLOB_RECURSE LIB_SOURCES "src/**/*.cpp" "src/**/*.hpp")
 
 # Create the library
-add_library(braiNNlet STATIC ${SOURCES})
+add_library(braiNNlet STATIC ${LIB_SOURCES})
 
 # Link Eigen3 to the library
 target_link_libraries(braiNNlet PUBLIC Eigen3::Eigen)
@@ -30,8 +30,18 @@ target_include_directories(braiNNlet PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Collect all test source files
+file(GLOB TEST_SOURCES 
+    "tests/test_main.cpp"
+    "tests/test_tensor.cpp" 
+    "tests/test_activations.cpp"
+    "tests/test_loss.cpp"
+    "tests/test_dense_layer.cpp"
+    "tests/test_backpropagation.cpp"
+)
+
 # Create the test executable
-add_executable(test tests/test.cpp)
+add_executable(test ${TEST_SOURCES})
 target_link_libraries(test braiNNlet)
 
 # Create the main executable

@@ -10,16 +10,19 @@ enum class ActivationType { ReLU, Sigmoid, Tanh, Linear };
 class ActivationFunction {
   public:
     virtual ~ActivationFunction() = default;
-    virtual Tensor forward(const Tensor& input) const = 0;
-    virtual Tensor backward(const Tensor& gradient) const = 0;
+    virtual Tensor forward(const Tensor& input) = 0;
+    virtual Tensor backward(const Tensor& gradient) = 0;
     virtual std::string name() const = 0;
     virtual ActivationType type() const = 0;
+
+  protected:
+    mutable Tensor last_input_;  // Store input from forward pass
 };
 
 class ReLU : public ActivationFunction {
   public:
-    Tensor forward(const Tensor& input) const override;
-    Tensor backward(const Tensor& gradient) const override;
+    Tensor forward(const Tensor& input) override;
+    Tensor backward(const Tensor& gradient) override;
     std::string name() const override {
         return "ReLU";
     }
@@ -30,8 +33,8 @@ class ReLU : public ActivationFunction {
 
 class Sigmoid : public ActivationFunction {
   public:
-    Tensor forward(const Tensor& input) const override;
-    Tensor backward(const Tensor& gradient) const override;
+    Tensor forward(const Tensor& input) override;
+    Tensor backward(const Tensor& gradient) override;
     std::string name() const override {
         return "Sigmoid";
     }
@@ -42,8 +45,8 @@ class Sigmoid : public ActivationFunction {
 
 class Tanh : public ActivationFunction {
   public:
-    Tensor forward(const Tensor& input) const override;
-    Tensor backward(const Tensor& gradient) const override;
+    Tensor forward(const Tensor& input) override;
+    Tensor backward(const Tensor& gradient) override;
     std::string name() const override {
         return "Tanh";
     }
@@ -54,8 +57,8 @@ class Tanh : public ActivationFunction {
 
 class Linear : public ActivationFunction {
   public:
-    Tensor forward(const Tensor& input) const override;
-    Tensor backward(const Tensor& gradient) const override;
+    Tensor forward(const Tensor& input) override;
+    Tensor backward(const Tensor& gradient) override;
     std::string name() const override {
         return "Linear";
     }

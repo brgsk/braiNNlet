@@ -11,7 +11,7 @@ extern int runTensorTests();
 extern int runActivationTests();
 extern int runLossTests();
 extern int runDenseLayerTests();
-extern int runBackpropagationTests();
+extern int runIntegrationTests();
 
 int main() {
     printf("🧠 braiNNlet Neural Network Library - Test Suite\n");
@@ -35,9 +35,9 @@ int main() {
     printf("4. Running Dense Layer Tests...\n");
     total_failures += runDenseLayerTests();
 
-    // Run backpropagation tests
-    printf("5. Running Backpropagation Tests...\n");
-    total_failures += runBackpropagationTests();
+    // Run integration tests
+    printf("5. Running Integration Tests...\n");
+    total_failures += runIntegrationTests();
 
     // Summary
     printf("================================================\n");

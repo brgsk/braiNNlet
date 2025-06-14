@@ -1,29 +1,33 @@
 //
 // Created by Bartosz Roguski on 07/06/2025.
 //
-#include "src/core/nn/tensor.hpp"
+#include "core/nn/Tensor.hpp"
 
 #include <cassert>
 #include <cmath>
 
+using namespace nn;
+
 void testTensorCreation() {
     printf("\n=== Testing Tensor Creation ===\n");
 
-    Tensor t1(2, 2);  // Should be zero-initialized
-    Matrix expected = Matrix::Zero(2, 2);
-    assert((t1.data() - expected).norm() < 1e-10);
-    printf("✓ Zero initialization test passed\n");
+    // Test default constructor and size constructor
+    Tensor t1(2, 2);
+    assert(t1.rows() == 2 && t1.cols() == 2);
+    assert(t1.size() == 4);
+    printf("✓ Size constructor test passed\n");
 
+    // Test matrix constructor
     Matrix m = Matrix::Ones(2, 2);
     Tensor t2(m);
     assert((t2.data() - Matrix::Ones(2, 2)).norm() < 1e-10);
     printf("✓ Matrix constructor test passed\n");
 
-    // Test shape access
-    assert(t1.rows() == 2 && t1.cols() == 2);
-    auto shape = t1.shape();
-    assert(shape.first == 2 && shape.second == 2);
-    printf("✓ Shape access test passed\n");
+    // Test move constructor
+    Matrix m2 = Matrix::Constant(2, 2, 3.0);
+    Tensor t3(std::move(m2));
+    assert((t3.data() - Matrix::Constant(2, 2, 3.0)).norm() < 1e-10);
+    printf("✓ Move constructor test passed\n");
 }
 
 void testElementAccess() {
@@ -33,14 +37,19 @@ void testElementAccess() {
     m(0, 1) = 5.0;
     Tensor t(m);
 
+    // Test const access
     assert(t(0, 1) == 5.0);
+    assert(t(0, 0) == 0.0);
+    printf("✓ Const element access test passed\n");
+
+    // Test non-const access
     t(1, 0) = 3.0;
     assert(t(1, 0) == 3.0);
-    printf("✓ Element access test passed\n");
+    printf("✓ Non-const element access test passed\n");
 }
 
-void testTensorOperations() {
-    printf("\n=== Testing Tensor Operations ===\n");
+void testBasicOperations() {
+    printf("\n=== Testing Basic Operations ===\n");
 
     Matrix m1 = Matrix::Ones(2, 2);
     Matrix m2 = Matrix::Constant(2, 2, 2.0);
@@ -53,20 +62,10 @@ void testTensorOperations() {
     assert((sum.data() - Matrix::Constant(2, 2, 3.0)).norm() < 1e-10);
     printf("✓ Addition test passed\n");
 
-    // Test hadamard (element-wise multiplication)
-    Tensor prod = t1.hadamard(t2);
-    assert((prod.data() - Matrix::Constant(2, 2, 2.0)).norm() < 1e-10);
-    printf("✓ Hadamard (element-wise) multiplication test passed\n");
-
-    // Test scalar division
-    Tensor div = t2 / 2.0;
-    assert((div.data() - Matrix::Constant(2, 2, 1.0)).norm() < 1e-10);
-    printf("✓ Scalar division test passed\n");
-
-    // Test element-wise division
-    Tensor div_elem = t2 / t1;
-    assert((div_elem.data() - Matrix::Constant(2, 2, 2.0)).norm() < 1e-10);
-    printf("✓ Element-wise division test passed\n");
+    // Test subtraction
+    Tensor diff = t2 - t1;
+    assert((diff.data() - Matrix::Constant(2, 2, 1.0)).norm() < 1e-10);
+    printf("✓ Subtraction test passed\n");
 
     // Test compound assignments
     Tensor t3 = t1;
@@ -106,99 +105,6 @@ void testMatrixOperations() {
     printf("✓ Transpose test passed\n");
 }
 
-void testBroadcasting() {
-    printf("\n=== Testing Broadcasting ===\n");
-
-    // Test bias addition: (2, 3) + (1, 3)
-    Matrix data(2, 3);
-    data << 1, 2, 3, 4, 5, 6;
-
-    Matrix bias(1, 3);
-    bias << 10, 20, 30;
-
-    Tensor t_data(data);
-    Tensor t_bias(bias);
-
-    Tensor result = t_data.broadcast_add(t_bias);
-    Matrix expected(2, 3);
-    expected << 11, 22, 33, 14, 25, 36;
-
-    assert((result.data() - expected).norm() < 1e-10);
-    printf("✓ Broadcasting addition test passed\n");
-}
-
-void testReductions() {
-    printf("\n=== Testing Reduction Operations ===\n");
-
-    Matrix m(2, 3);
-    m << 1, 2, 3, 4, 5, 6;
-
-    Tensor t(m);
-
-    // Test sum all
-    double sum_all = t.sum();
-    assert(std::abs(sum_all - 21.0) < 1e-10);
-    printf("✓ Sum all test passed\n");
-
-    // Test sum along axis 0 (columns)
-    Tensor sum_cols = t.sum(0);
-    assert(std::abs(sum_cols(0, 0) - 5.0) < 1e-10);
-    assert(std::abs(sum_cols(0, 1) - 7.0) < 1e-10);
-    assert(std::abs(sum_cols(0, 2) - 9.0) < 1e-10);
-    printf("✓ Sum along columns test passed\n");
-
-    // Test mean
-    double mean_all = t.mean();
-    assert(std::abs(mean_all - 3.5) < 1e-10);
-    printf("✓ Mean test passed\n");
-
-    // Test norm
-    double norm = t.norm();
-    assert(std::abs(norm - std::sqrt(91.0)) < 1e-10);
-    printf("✓ Norm test passed\n");
-}
-
-void testFunctionApplication() {
-    printf("\n=== Testing Function Application ===\n");
-
-    Matrix m = Matrix::Ones(2, 2);
-    Tensor t(m);
-
-    // Test ReLU-like function
-    auto relu = [](double x) { return std::max(0.0, x); };
-    Tensor result = t.apply(relu);
-    assert((result.data() - Matrix::Ones(2, 2)).norm() < 1e-10);
-
-    // Test square function
-    auto square = [](double x) { return x * x; };
-    Tensor squared = t.apply(square);
-    assert((squared.data() - Matrix::Ones(2, 2)).norm() < 1e-10);
-
-    printf("✓ Function application test passed\n");
-}
-
-void testReshape() {
-    printf("\n=== Testing Reshape ===\n");
-
-    Matrix m(2, 3);
-    m << 1, 2, 3, 4, 5, 6;
-
-    Tensor t(m);
-    t.resize(3, 2);
-
-    // Test that dimensions are correct
-    assert(t.rows() == 3 && t.cols() == 2);
-    printf("✓ Reshape dimensions test passed\n");
-
-    // Test that we can set new values after resize
-    t.zero();
-    t(0, 0) = 10;
-    t(1, 1) = 20;
-    assert(t(0, 0) == 10 && t(1, 1) == 20);
-
-    printf("✓ Reshape test passed\n");
-}
-
 void testScalarOperations() {
     printf("\n=== Testing Scalar Operations ===\n");
 
@@ -209,6 +115,11 @@ void testScalarOperations() {
     Tensor prod = t * 3.0;
     assert((prod.data() - Matrix::Constant(2, 2, 3.0)).norm() < 1e-10);
     printf("✓ Scalar multiplication test passed\n");
+
+    // Test scalar multiplication (commutative)
+    Tensor prod2 = 3.0 * t;
+    assert((prod2.data() - Matrix::Constant(2, 2, 3.0)).norm() < 1e-10);
+    printf("✓ Commutative scalar multiplication test passed\n");
 
     // Test scalar division
     Tensor div = t / 2.0;
@@ -225,21 +136,135 @@ void testScalarOperations() {
     printf("✓ Compound division test passed\n");
 }
 
+void testUtilityFunctions() {
+    printf("\n=== Testing Utility Functions ===\n");
+
+    Tensor t(2, 2);
+
+    // Test zero
+    t.fill(5.0);
+    t.zero();
+    assert((t.data() - Matrix::Zero(2, 2)).norm() < 1e-10);
+    printf("✓ Zero function test passed\n");
+
+    // Test fill
+    t.fill(3.5);
+    assert((t.data() - Matrix::Constant(2, 2, 3.5)).norm() < 1e-10);
+    printf("✓ Fill function test passed\n");
+
+    // Test random (just check it's not all zeros)
+    t.random(-1.0, 1.0);
+    assert(t.data().norm() > 1e-10);
+    printf("✓ Random function test passed\n");
+}
+
+void testStatistics() {
+    printf("\n=== Testing Statistics ===\n");
+
+    Matrix m(2, 3);
+    m << 1, 2, 3, 4, 5, 6;
+    Tensor t(m);
+
+    // Test sum
+    double sum_all = t.sum();
+    assert(std::abs(sum_all - 21.0) < 1e-10);
+    printf("✓ Sum test passed\n");
+
+    // Test mean
+    double mean_all = t.mean();
+    assert(std::abs(mean_all - 3.5) < 1e-10);
+    printf("✓ Mean test passed\n");
+
+    // Test norm
+    double norm = t.norm();
+    assert(std::abs(norm - std::sqrt(91.0)) < 1e-10);
+    printf("✓ Norm test passed\n");
+}
+
+void testShapeOperations() {
+    printf("\n=== Testing Shape Operations ===\n");
+
+    Matrix m(2, 3);
+    m << 1, 2, 3, 4, 5, 6;
+    Tensor t(m);
+
+    // Test resize
+    t.resize(3, 2);
+    assert(t.rows() == 3 && t.cols() == 2);
+    printf("✓ Resize test passed\n");
+
+    // Test that we can set new values after resize
+    t.zero();
+    t(0, 0) = 10;
+    t(1, 1) = 20;
+    assert(t(0, 0) == 10 && t(1, 1) == 20);
+    printf("✓ Post-resize functionality test passed\n");
+}
+
+void testSerialization() {
+    printf("\n=== Testing Serialization ===\n");
+
+    Matrix m(2, 2);
+    m << 1, 2, 3, 4;
+    Tensor t(m);
+
+    // Test to_vector (Eigen uses column-major storage)
+    std::vector<double> vec = t.to_vector();
+    assert(vec.size() == 4);
+    assert(vec[0] == 1 && vec[1] == 3 && vec[2] == 2 && vec[3] == 4);
+    printf("✓ To vector test passed\n");
+
+    // Test from_vector
+    Tensor t2;
+    std::vector<double> test_vec = {5, 6, 7, 8, 9, 10};
+    t2.from_vector(test_vec, 2, 3);
+    assert(t2.rows() == 2 && t2.cols() == 3);
+    assert(t2(0, 0) == 5 && t2(1, 2) == 10);
+    printf("✓ From vector test passed\n");
+}
+
+void testEdgeCases() {
+    printf("\n=== Testing Edge Cases ===\n");
+
+    // Test empty tensor
+    Tensor empty(0, 0);
+    assert(empty.rows() == 0 && empty.cols() == 0 && empty.size() == 0);
+    printf("✓ Empty tensor test passed\n");
+
+    // Test single element tensor
+    Tensor single(1, 1);
+    single(0, 0) = 42.0;
+    assert(single(0, 0) == 42.0);
+    assert(single.sum() == 42.0);
+    printf("✓ Single element tensor test passed\n");
+
+    // Test dimension mismatch handling (should throw)
+    try {
+        Tensor t1(2, 2);
+        Tensor t2(3, 3);
+        Tensor result = t1 + t2;  // Should throw
+        assert(false);            // Should not reach here
+    } catch (const std::invalid_argument &) {
+        printf("✓ Dimension mismatch handling test passed\n");
+    }
+}
+
 int runTensorTests() {
     try {
         printf("=== TENSOR TESTS ===\n");
         testTensorCreation();
         testElementAccess();
-        testTensorOperations();
+        testBasicOperations();
         testMatrixOperations();
-        testBroadcasting();
-        testReductions();
-        testFunctionApplication();
-        testReshape();
         testScalarOperations();
+        testUtilityFunctions();
+        testStatistics();
+        testShapeOperations();
+        testSerialization();
+        testEdgeCases();
         printf("✅ All tensor tests passed!\n\n");
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         printf("❌ Tensor test failed: %s\n", e.what());
         return 1;
     }

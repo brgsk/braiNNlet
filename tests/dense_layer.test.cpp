@@ -1,12 +1,12 @@
 //
 // Created by Bartosz Roguski on 07/06/2025.
 //
-#include "src/core/nn/dense_layer.hpp"
-
 #include <cassert>
 #include <cmath>
 
-#include "src/core/nn/activations.hpp"
+#include "core/nn/DenseLayer.hpp"
+
+using namespace nn;
 
 void testDenseLayerCreation() {
     printf("\n=== Testing Dense Layer Creation ===\n");
@@ -30,6 +30,11 @@ void testDenseLayerCreation() {
     double weight_sum = weights.sum();
     assert(std::abs(weight_sum) > 1e-10);  // Should not be zero
     printf("✓ Random weight initialization test passed\n");
+
+    // Test layer properties
+    assert(layer.has_parameters() == true);
+    assert(layer.parameter_count() == 2 * 3 + 3);  // weights + biases
+    printf("✓ Layer properties test passed\n");
 }
 
 void testDenseLayerForward() {
@@ -292,6 +297,66 @@ void testDenseLayerBatchProcessing() {
     printf("✓ Batch backward pass test passed\n");
 }
 
+void testDenseLayerInitialization() {
+    printf("\n=== Testing Dense Layer Initialization Methods ===\n");
+
+    DenseLayer layer(3, 2, ActivationType::ReLU);
+
+    // Test Xavier initialization
+    layer.xavier_init();
+    auto xavier_weights = layer.weights();
+
+    // Check that weights are in reasonable range for Xavier init
+    double limit = std::sqrt(6.0 / (3 + 2));  // sqrt(6/(fan_in + fan_out))
+    bool in_range = true;
+    for (int i = 0; i < xavier_weights.rows(); ++i) {
+        for (int j = 0; j < xavier_weights.cols(); ++j) {
+            if (std::abs(xavier_weights(i, j)) > limit) {
+                in_range = false;
+                break;
+            }
+        }
+    }
+    assert(in_range);
+    printf("✓ Xavier initialization test passed\n");
+
+    // Test He initialization
+    layer.he_init();
+    auto he_weights = layer.weights();
+
+    // Check that weights are different from Xavier (probabilistically)
+    assert((he_weights.data() - xavier_weights.data()).norm() > 1e-10);
+    printf("✓ He initialization test passed\n");
+}
+
+void testDenseLayerEdgeCases() {
+    printf("\n=== Testing Dense Layer Edge Cases ===\n");
+
+    // Test single input/output
+    DenseLayer single_layer(1, 1, ActivationType::Linear);
+
+    Matrix single_input(1, 1);
+    single_input << 5.0;
+    Tensor input(single_input);
+
+    Tensor output = single_layer.forward(input);
+    assert(output.rows() == 1 && output.cols() == 1);
+    printf("✓ Single input/output test passed\n");
+
+    // Test large layer
+    DenseLayer large_layer(10, 5, ActivationType::ReLU);
+    assert(large_layer.parameter_count() == 10 * 5 + 5);  // 55 parameters
+    printf("✓ Large layer test passed\n");
+
+    // Test layer name
+    std::string name = large_layer.name();
+    assert(name.find("Dense") != std::string::npos);
+    assert(name.find("10") != std::string::npos);
+    assert(name.find("5") != std::string::npos);
+    assert(name.find("ReLU") != std::string::npos);
+    printf("✓ Layer name test passed\n");
+}
+
 int runDenseLayerTests() {
     try {
         printf("=== DENSE LAYER TESTS ===\n");
@@ -302,9 +367,11 @@ int runDenseLayerTests() {
         testDenseLayerParameterUpdates();
         testDenseLayerGradientZeroing();
         testDenseLayerBatchProcessing();
+        testDenseLayerInitialization();
+        testDenseLayerEdgeCases();
         printf("✅ All dense layer tests passed!\n\n");
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         printf("❌ Dense layer test failed: %s\n", e.what());
         return 1;
     }

@@ -1,10 +1,12 @@
 //
 // Created by Bartosz Roguski on 07/06/2025.
 //
-#include "src/core/nn/activations.hpp"
+#include "core/nn/Activations.hpp"
 
 #include <cassert>
 #include <cmath>
+
+using namespace nn;
 
 void testReLUActivation() {
     printf("\n=== Testing ReLU Activation ===\n");
@@ -27,9 +29,9 @@ void testReLUActivation() {
 
     // Test backward pass - should be 0 for negative inputs, 1 for positive
     Tensor grad_output(2, 3);
-    grad_output.fill(1.0);  // Gradient from next layer
+    grad_output.fill(1.0);
 
-    Tensor grad_input = relu->backward(grad_output);
+    Tensor grad_input = relu->backward(input_tensor);
 
     Matrix expected_grad(2, 3);
     expected_grad << 0, 0, 1, 0, 1, 0;
@@ -58,14 +60,11 @@ void testLinearActivation() {
     assert((output.data() - input).norm() < 1e-10);
     printf("✓ Linear forward pass test passed\n");
 
-    // Test backward pass - should return gradient unchanged
-    Tensor grad_output(2, 2);
-    grad_output.fill(2.5);
+    // Test backward pass - should return ones (derivative of x is 1)
+    Tensor grad_input = linear->backward(input_tensor);
+    Matrix expected_grad = Matrix::Ones(2, 2);
 
-    Tensor grad_input = linear->backward(grad_output);
-
-    // Should return the gradient unchanged
-    assert((grad_input.data() - grad_output.data()).norm() < 1e-10);
+    assert((grad_input.data() - expected_grad).norm() < 1e-10);
     printf("✓ Linear backward pass test passed\n");
 
     // Test properties
@@ -93,10 +92,7 @@ void testTanhActivation() {
     printf("✓ Tanh forward pass test passed\n");
 
     // Test backward pass - derivative is 1 - tanh^2(x)
-    Tensor grad_output(2, 2);
-    grad_output.fill(1.0);
-
-    Tensor grad_input = tanh_act->backward(grad_output);
+    Tensor grad_input = tanh_act->backward(input_tensor);
 
     // Expected derivative: 1 - tanh^2(x)
     Matrix expected_grad(2, 2);
@@ -139,10 +135,7 @@ void testSigmoidActivation() {
     printf("✓ Sigmoid forward pass test passed\n");
 
     // Test backward pass - derivative is sigmoid(x) * (1 - sigmoid(x))
-    Tensor grad_output(2, 2);
-    grad_output.fill(1.0);
-
-    Tensor grad_input = sigmoid->backward(grad_output);
+    Tensor grad_input = sigmoid->backward(input_tensor);
 
     // Expected derivative: sigmoid(x) * (1 - sigmoid(x))
     Matrix expected_grad(2, 2);
@@ -187,7 +180,7 @@ void testActivationFactoryFunctions() {
     try {
         activation_from_string("Unknown");
         assert(false);  // Should throw
-    } catch (const std::invalid_argument&) {
+    } catch (const std::invalid_argument &) {
         printf("✓ Unknown activation string handling test passed\n");
     }
 
@@ -234,6 +227,33 @@ void testActivationEdgeCases() {
     printf("✓ Empty tensor handling test passed\n");
 }
 
+void testActivationBatchProcessing() {
+    printf("\n=== Testing Activation Batch Processing ===\n");
+
+    auto relu = create_activation(ActivationType::ReLU);
+
+    // Test with batch input (multiple samples)
+    Matrix batch_input(3, 2);
+    batch_input << -1, 2, 0, -3, 4, -0.5;
+
+    Tensor input_tensor(batch_input);
+    Tensor output = relu->forward(input_tensor);
+
+    Matrix expected(3, 2);
+    expected << 0, 2, 0, 0, 4, 0;
+
+    assert((output.data() - expected).norm() < 1e-10);
+    printf("✓ Batch forward pass test passed\n");
+
+    // Test batch backward pass
+    Tensor grad_input = relu->backward(input_tensor);
+    Matrix expected_grad(3, 2);
+    expected_grad << 0, 1, 0, 0, 1, 0;
+
+    assert((grad_input.data() - expected_grad).norm() < 1e-10);
+    printf("✓ Batch backward pass test passed\n");
+}
+
 int runActivationTests() {
     try {
         printf("=== ACTIVATION FUNCTION TESTS ===\n");
@@ -243,9 +263,10 @@ int runActivationTests() {
         testSigmoidActivation();
         testActivationFactoryFunctions();
         testActivationEdgeCases();
+        testActivationBatchProcessing();
         printf("✅ All activation function tests passed!\n\n");
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         printf("❌ Activation test failed: %s\n", e.what());
         return 1;
     }

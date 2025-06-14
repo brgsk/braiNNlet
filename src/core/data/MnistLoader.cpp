@@ -13,17 +13,24 @@ MnistDataset::MnistDataset() {
     loaded_ = false;
 }
 
-bool MnistDataset::load(const std::string& path) {
+bool MnistDataset::load(const std::string &path) {
     // Try to load real MNIST data first
     if (!path.empty() && std::filesystem::exists(path)) {
         return load_train_test_split(path, 1.0);  // Load all training data
     }
 
-    // Try default MNIST directory
-    std::string mnist_dir = "src/core/data/MNIST";
-    if (std::filesystem::exists(mnist_dir)) {
-        std::cout << "Loading MNIST dataset from: " << mnist_dir << std::endl;
-        return load_train_test_split(mnist_dir, 1.0);
+    // Try default MNIST directory - check both relative to cwd and relative to project root
+    std::vector<std::string> possible_paths = {
+        "src/core/data/MNIST",       // When running from project root
+        "../src/core/data/MNIST",    // When running from build directory
+        "../../src/core/data/MNIST"  // Additional fallback
+    };
+
+    for (const auto &mnist_dir : possible_paths) {
+        if (std::filesystem::exists(mnist_dir)) {
+            std::cout << "Loading MNIST dataset from: " << mnist_dir << std::endl;
+            return load_train_test_split(mnist_dir, 1.0);
+        }
     }
 
     // Fallback to dummy data if MNIST files not found
@@ -33,7 +40,7 @@ bool MnistDataset::load(const std::string& path) {
     return true;
 }
 
-bool MnistDataset::load_train_test_split(const std::string& mnist_dir, double train_ratio) {
+bool MnistDataset::load_train_test_split(const std::string &mnist_dir, double train_ratio) {
     try {
         std::string train_images_path = mnist_dir + "/train-images.idx3-ubyte";
         std::string train_labels_path = mnist_dir + "/train-labels.idx1-ubyte";
@@ -53,8 +60,8 @@ bool MnistDataset::load_train_test_split(const std::string& mnist_dir, double tr
         samples_.reserve(images.size());
 
         for (size_t i = 0; i < images.size(); ++i) {
-            Tensor features = normalize_image(images[i]);
-            Tensor label_tensor = create_one_hot(labels[i], 10);
+            nn::Tensor features = normalize_image(images[i]);
+            nn::Tensor label_tensor = create_one_hot(labels[i], 10);
             samples_.emplace_back(features, label_tensor);
         }
 
@@ -73,8 +80,7 @@ bool MnistDataset::load_train_test_split(const std::string& mnist_dir, double tr
 
         loaded_ = true;
         return true;
-
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Error loading MNIST data: " << e.what() << std::endl;
         // Fallback to dummy data
         create_dummy_data();
@@ -98,7 +104,7 @@ void MnistDataset::create_validation_split(double validation_ratio) {
               << std::endl;
 }
 
-std::vector<std::vector<uint8_t>> MnistDataset::load_images(const std::string& filename) {
+std::vector<std::vector<uint8_t>> MnistDataset::load_images(const std::string &filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open image file: " + filename);
@@ -127,7 +133,7 @@ std::vector<std::vector<uint8_t>> MnistDataset::load_images(const std::string& f
 
     for (uint32_t i = 0; i < num_images; ++i) {
         std::vector<uint8_t> image(784);  // 28*28 = 784
-        file.read(reinterpret_cast<char*>(image.data()), 784);
+        file.read(reinterpret_cast<char *>(image.data()), 784);
         if (!file) {
             throw std::runtime_error("Error reading image data");
         }
@@ -137,7 +143,7 @@ std::vector<std::vector<uint8_t>> MnistDataset::load_images(const std::string& f
     return images;
 }
 
-std::vector<uint8_t> MnistDataset::load_labels(const std::string& filename) {
+std::vector<uint8_t> MnistDataset::load_labels(const std::string &filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Cannot open label file: " + filename);
@@ -154,7 +160,7 @@ std::vector<uint8_t> MnistDataset::load_labels(const std::string& filename) {
 
     // Read label data
     std::vector<uint8_t> labels(num_labels);
-    file.read(reinterpret_cast<char*>(labels.data()), num_labels);
+    file.read(reinterpret_cast<char *>(labels.data()), num_labels);
     if (!file) {
         throw std::runtime_error("Error reading label data");
     }
@@ -162,9 +168,9 @@ std::vector<uint8_t> MnistDataset::load_labels(const std::string& filename) {
     return labels;
 }
 
-uint32_t MnistDataset::read_big_endian_uint32(std::ifstream& file) {
+uint32_t MnistDataset::read_big_endian_uint32(std::ifstream &file) {
     uint32_t value = 0;
-    file.read(reinterpret_cast<char*>(&value), 4);
+    file.read(reinterpret_cast<char *>(&value), 4);
     if (!file) {
         throw std::runtime_error("Error reading big-endian uint32");
     }
@@ -174,8 +180,8 @@ uint32_t MnistDataset::read_big_endian_uint32(std::ifstream& file) {
            ((value & 0x0000FF00) << 8) | ((value & 0x000000FF) << 24);
 }
 
-Tensor MnistDataset::normalize_image(const std::vector<uint8_t>& image_data) const {
-    Tensor features(1, 784);
+nn::Tensor MnistDataset::normalize_image(const std::vector<uint8_t> &image_data) const {
+    nn::Tensor features(1, 784);
 
     // Normalize pixel values from [0, 255] to [0, 1]
     for (int i = 0; i < 784; ++i) {
@@ -210,21 +216,21 @@ void MnistDataset::create_dummy_data() {
 
     for (int i = 0; i < num_samples; ++i) {
         // Create random 28x28 image (flattened to 784 pixels)
-        Tensor features(1, 784);
+        nn::Tensor features(1, 784);
         for (int j = 0; j < 784; ++j) {
             features(0, j) = pixel_dist(gen);
         }
 
         // Create random label (0-9)
         int label = label_dist(gen);
-        Tensor one_hot_label = create_one_hot(label, 10);
+        nn::Tensor one_hot_label = create_one_hot(label, 10);
 
         samples_.emplace_back(features, one_hot_label);
     }
 }
 
-Tensor MnistDataset::create_one_hot(int label, int num_classes) const {
-    Tensor one_hot(1, num_classes);
+nn::Tensor MnistDataset::create_one_hot(int label, int num_classes) const {
+    nn::Tensor one_hot(1, num_classes);
     one_hot.zero();
 
     if (label >= 0 && label < num_classes) {

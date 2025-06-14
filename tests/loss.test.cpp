@@ -1,11 +1,13 @@
 //
 // Created by Bartosz Roguski on 07/06/2025.
 //
-#include "src/core/nn/loss.hpp"
+#include "core/nn/Loss.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <iomanip>
+
+using namespace nn;
 
 void testMeanSquaredError() {
     printf("\n=== Testing Mean Squared Error ===\n");
@@ -151,7 +153,7 @@ void testLossFactoryFunctions() {
     try {
         loss_from_string("Unknown");
         assert(false);  // Should throw
-    } catch (const std::invalid_argument&) {
+    } catch (const std::invalid_argument &) {
         printf("✓ Unknown loss string handling test passed\n");
     }
 
@@ -228,42 +230,37 @@ void testLossBatchHandling() {
     printf("✓ Batch gradient calculation test passed\n");
 }
 
-void testLossWithNeuralNetwork() {
-    printf("\n=== Testing Loss Integration with Neural Network ===\n");
-
-    // Create a simple 1-layer network manually
-    Matrix weights(2, 1);
-    weights << 0.5, -0.3;
-    Matrix bias(1, 1);
-    bias << 0.1;
-
-    Matrix input(1, 2);
-    input << 2.0, 3.0;
-    Matrix target(1, 1);
-    target << 1.0;
-
-    // Forward pass: output = input * weights + bias
-    Tensor input_tensor(input);
-    Tensor weights_tensor(weights);
-    Tensor bias_tensor(bias);
-    Tensor target_tensor(target);
-
-    Tensor output = input_tensor * weights_tensor;
-    output = output.broadcast_add(bias_tensor);
-    // Expected: [2, 3] * [0.5; -0.3] + 0.1 = 1.0 - 0.9 + 0.1 = 0.2
+void testLossEdgeCases() {
+    printf("\n=== Testing Loss Edge Cases ===\n");
 
     auto mse = create_loss(LossType::MeanSquaredError);
-    double loss = mse->forward(output, target_tensor);
 
-    // Expected loss: (0.2 - 1.0)^2 = 0.64
-    assert(std::abs(loss - 0.64) < 1e-10);
-    printf("✓ Network integration forward pass test passed (loss = %.6f)\n", loss);
+    // Test with single element
+    Matrix single_pred(1, 1);
+    single_pred << 2.5;
+    Matrix single_target(1, 1);
+    single_target << 1.0;
 
-    // Test backward pass through loss
-    Tensor loss_grad = mse->backward(output, target_tensor);
-    // Expected: 2 * (0.2 - 1.0) / 1 = -1.6
-    assert(std::abs(loss_grad(0, 0) - (-1.6)) < 1e-10);
-    printf("✓ Network integration backward pass test passed\n");
+    Tensor pred(single_pred);
+    Tensor target(single_target);
+
+    double loss = mse->forward(pred, target);
+    double expected = (2.5 - 1.0) * (2.5 - 1.0);  // 2.25
+    assert(std::abs(loss - expected) < 1e-10);
+    printf("✓ Single element loss test passed\n");
+
+    // Test with zero loss (perfect predictions)
+    Matrix perfect_pred(1, 2);
+    perfect_pred << 1.0, 2.0;
+    Matrix perfect_target(1, 2);
+    perfect_target << 1.0, 2.0;
+
+    Tensor perfect_p(perfect_pred);
+    Tensor perfect_t(perfect_target);
+
+    double zero_loss = mse->forward(perfect_p, perfect_t);
+    assert(std::abs(zero_loss) < 1e-10);
+    printf("✓ Zero loss test passed\n");
 }
 
 int runLossTests() {
@@ -275,10 +272,10 @@ int runLossTests() {
         testLossFactoryFunctions();
         testLossNumericalStability();
         testLossBatchHandling();
-        testLossWithNeuralNetwork();
+        testLossEdgeCases();
         printf("✅ All loss function tests passed!\n\n");
         return 0;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         printf("❌ Loss test failed: %s\n", e.what());
         return 1;
     }

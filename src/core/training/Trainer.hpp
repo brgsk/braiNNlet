@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "../data/Dataset.hpp"
-#include "../nn/network.hpp"
+#include "../nn/Network.hpp"
 
 namespace training {
 
@@ -40,7 +40,7 @@ using OnTrainingEndCallback = std::function<void(const std::vector<TrainingMetri
 
 class Trainer {
   public:
-    Trainer(Network& network, data::Dataset& dataset);
+    Trainer(nn::Network& network, data::Dataset& dataset);
 
     // Training
     void train(const TrainingConfig& config);
@@ -64,7 +64,7 @@ class Trainer {
 
     // Evaluation
     TrainingMetrics evaluate(const std::vector<int>& indices, int batch_size = 32);
-    double compute_accuracy(const Tensor& predictions, const Tensor& targets);
+    double compute_accuracy(const nn::Tensor& predictions, const nn::Tensor& targets);
 
     // History
     const std::vector<TrainingMetrics>& training_history() const {
@@ -79,7 +79,7 @@ class Trainer {
     }
 
   private:
-    Network& network_;
+    nn::Network& network_;
     data::Dataset& dataset_;
 
     // Training state

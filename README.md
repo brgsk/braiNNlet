@@ -1,194 +1,266 @@
-# braiNNlet - a lightweight C++ neural network library
+# braiNNlet - Interactive Neural Network Explorer
 
-A lightweight C++ neural network library built from scratch using Eigen for linear algebra operations. This project provides fundamental building blocks for creating and training neural networks.
+An interactive desktop application for building, training, and visualizing deep neural networks built with Qt6, C++20, and Eigen3.
 
-## Features
+## Project Overview
 
-- **Comprehensive Tensor Operations**:
-  - Element-wise operations (add, subtract, hadamard product, divide)
-  - Matrix operations (matrix multiplication, transpose)
-  - Broadcasting for bias addition
-  - Reduction operations (sum, mean, norm)
-  - Shape manipulation (reshape)
-  - Function application (for activation functions)
-  - Element access and shape queries
-- **Neural Network Layers**: Configurable dense layers with forward pass implementation
-- **Eigen Integration**: High-performance linear algebra operations using Eigen library
-- **Modern C++**: Written in C++17 with proper memory management and move semantics
-- **Batch Processing**: Support for batch forward passes through neural network layers
-- **Comprehensive Testing**: Full test suite covering all tensor operations
+braiNNlet provides an intuitive GUI interface for creating neural networks layer-by-layer, training them on datasets like MNIST, and visualizing the training process in real-time.
+
+### Key Features
+
+- **Interactive Network Builder**: Add/remove layers with different activation functions
+- **Real-time Training Visualization**: Live plots of loss and accuracy metrics
+- **Dataset Support**: MNIST integration
+- **Modern C++ Implementation**: Built with C++20 features and best practices
 
 ## Project Structure
 
 ```
 braiNNlet/
+├── CMakeLists.txt              # Main CMake configuration
+├── README.md                   # This file
 ├── src/
-│   └── core/
-│       └── nn/
-│           ├── tensor.hpp/cpp    # Tensor data structure and operations
-│           └── layer.hpp/cpp     # Neural network layer implementation
-├── tests/
-│   └── test.cpp                  # Comprehensive unit tests
-├── CMakeLists.txt               # Build configuration
-└── main.cpp                     # Example usage and demonstrations
+│   ├── core/                   # Core neural network library (no Qt dependencies)
+│   │   ├── nn/                 # Neural network components
+│   │   │   ├── Tensor.hpp/cpp  # Matrix operations with Eigen
+│   │   │   ├── Layer.hpp/cpp   # Abstract layer base class
+│   │   │   ├── DenseLayer.hpp/cpp # Fully connected layer
+│   │   │   ├── Activations.hpp/cpp # Activation functions
+│   │   │   ├── Loss.hpp/cpp    # Loss functions
+│   │   │   └── Network.hpp/cpp # Complete network class
+│   │   ├── data/               # Dataset loading
+│   │   │   ├── Dataset.hpp/cpp # Base dataset class
+│   │   │   └── MnistLoader.hpp/cpp # MNIST dataset
+│   │   └── training/           # Training infrastructure
+│   │       └── Trainer.hpp/cpp # Training loop with callbacks
+│   ├── gui/                    # Qt GUI components
+│   │   ├── MainWindow.hpp/cpp  # Main application window
+│   │   └── PlotWidget.hpp/cpp  # Training plots
+│   └── app/
+│       ├── main.cpp            # Application entry point
+│       └── gui_main.cpp        # GUI application entry point
+├── tests/                      # Comprehensive test suite
+│   ├── CMakeLists.txt          # Test configuration
+│   ├── main.test.cpp           # Test runner and orchestration
+│   ├── tensor.test.cpp         # Tensor class tests
+│   ├── activations.test.cpp    # Activation function tests
+│   ├── loss.test.cpp           # Loss function tests
+│   ├── dense_layer.test.cpp    # Dense layer tests
+│   └── integration.test.cpp    # End-to-end integration tests
+└── build/                      # Build directory (generated)
 ```
+
+## Architecture
+
+### Core Design Principles
+
+1. **Separation of Concerns**: Core neural network logic is independent of GUI
+2. **Modern C++**: Uses C++20 features, RAII, smart pointers
+3. **Type Safety**: Strong typing with STL containers (`std::vector<std::string>`)
+4. **Performance**: Eigen3 for optimized matrix operations
+5. **Testability**: Unit tests for core functionality
+
+### Neural Network Components
+
+- **Tensor**: Wrapper around Eigen matrices with NN-specific operations
+- **Layer**: Abstract base class for all layer types
+- **DenseLayer**: Fully connected layer with configurable activation
+- **Activations**: ReLU, Sigmoid, Tanh, Linear functions
+- **Loss Functions**: MSE, CrossEntropy, BinaryCrossEntropy
+- **Network**: Container for layers with forward/backward passes
+- **Trainer**: Training loop with metrics and callbacks
 
 ## Dependencies
 
-- **CMake** 3.20 or higher
-- **C++17** compatible compiler
-- **Eigen3** (automatically downloaded via FetchContent)
+### Required
+
+- **CMake** ≥ 3.25
+- **C++20** compatible compiler (GCC 10+, Clang 12+, MSVC 2019+)
+- **Qt6** (Widgets, Charts, Concurrent)
+- **Eigen3** (Linear algebra library)
 
 ## Building
 
-1. Clone the repository:
+Ensure Qt6 and Eigen3 are installed on your system:
 
 ```bash
-git clone git@github.com:brgsk/braiNNlet.git
-cd braiNNlet
-```
+# Ubuntu/Debian
+sudo apt install qt6-base-dev libqt6charts6-dev libeigen3-dev
 
-2. Create build directory and compile:
+# macOS with Homebrew
+brew install qt6 eigen
 
-```bash
-mkdir build
-cd build
-cmake ..
-make
-```
-
-3. Run the main example:
-
-```bash
-./main
-```
-
-4. Run tests:
-
-```bash
-./test
+# Build
+cmake -B build -S .
+cmake --build build --config Release
 ```
 
 ## Usage
 
-### Tensor Operations
+### Console Demo
 
-```cpp
-#include "src/core/nn/tensor.hpp"
+The current implementation includes a console demo application:
 
-// Create tensors
-Tensor tensor(10, 10);  // 2D tensor
-Tensor tensor2(Matrix::Zero(10, 10));  // From Eigen matrix
-
-// Element-wise operations
-Tensor sum = tensor1 + tensor2;
-Tensor hadamard = tensor1.hadamard(tensor2);  // Element-wise multiplication
-Tensor scaled = tensor1 * 2.0;
-tensor1 *= 2.0;  // In-place operations
-
-// Matrix operations
-Tensor result = matrix1.matmul(matrix2);  // Matrix multiplication
-Tensor transposed = matrix1.transpose();
-
-// Broadcasting (for bias addition)
-Tensor with_bias = data.broadcast_add(bias);
-
-// Reductions
-Tensor sum_all = tensor.sum(-1);  // Sum all elements
-Tensor sum_cols = tensor.sum(0);  // Sum along columns
-double norm = tensor.norm();
-
-// Shape operations
-auto shape = tensor.shape();  // Get dimensions
-Tensor reshaped = tensor.reshape(new_rows, new_cols);
-
-// Element access
-double value = tensor(row, col);
-tensor(row, col) = new_value;
-
-// Function application (for activations)
-auto relu = [](double x) { return std::max(0.0, x); };
-Tensor activated = tensor.apply(relu);
+```bash
+./build/brainnlet_demo.exe
 ```
 
-### Neural Network Layer
+which showcases the core functionality of the library.
 
-```cpp
-#include "src/core/nn/layer.hpp"
+### GUI Application
 
-// Create a layer with 3 neurons and 4 inputs
-Layer layer(3, 4);
+Run the application with:
 
-// Create input data
-Matrix inputMatrix(1, 4);
-inputMatrix << 1.0, 2.0, 3.0, 4.0;
-Tensor input(inputMatrix);
-
-// Forward pass
-Tensor output = layer.forward(input);
-
-// Batch processing
-Matrix batchMatrix(2, 4);  // 2 samples, 4 features each
-batchMatrix << 1.0, 2.0, 3.0, 4.0,
-               5.0, 6.0, 7.0, 8.0;
-Tensor batchInput(batchMatrix);
-Tensor batchOutput = layer.forward(batchInput);
+```bash
+./build/brainnlet.exe
 ```
 
-## Current Implementation Status
+which showcases the core functionality of the library.
 
-### ✅ Fully Implemented
+## Development Status
 
-- **Tensor Operations**:
-  - Element-wise arithmetic (add, subtract, divide, hadamard product)
-  - Matrix multiplication and transpose
-  - Broadcasting for bias addition
-  - Reduction operations (sum, mean, norm)
-  - Shape manipulation and element access
-  - Function application for activations
-  - Comprehensive dimension validation
-- **Dense Layers**:
-  - Configurable neurons and inputs
-  - Xavier/Glorot weight initialization
-  - Forward pass with matrix multiplication and bias addition
-  - Batch processing support
-- **Memory Management**:
-  - Proper move semantics and copy operations
-  - Exception safety and error handling
+### ✅ Completed
 
-### 🚧 In Development
+- Core neural network library (Tensor, Layer, Network classes)
+- Training infrastructure with callbacks
+- Dataset loading framework
+- Basic console application
+- Qt GUI implementation
+- Real-time loss and accuracy plotting
+- Project structure and build system
+- **Comprehensive test suite** with test cases covering all core functionality
 
-- Backward pass (gradient computation)
-- Activation functions (ReLU, Sigmoid, Softmax, etc.)
-- Loss functions (MSE, Cross-entropy)
-- Optimizers (SGD, Adam, RMSprop)
-- Multi-layer network class
+### 🚧 In Progress
 
-### 📋 Planned Features
+- Network visualization
 
-- Convolutional layers
-- Recurrent layers (LSTM, GRU)
-- Model serialization/deserialization
-- GPU acceleration
-- Python bindings
+### 📋 Planned
+
+- Add more datasets
+- More layer types (Convolutional, LSTM)
+- Advanced optimizers (Adam, RMSprop)
+- Model serialization/loading
+- Batch normalization
+- Dropout layers
 
 ## Testing
 
-The project includes comprehensive tests covering:
+braiNNlet includes a comprehensive test suite that validates all core functionality with individual test cases across 5 test categories.
 
-- Tensor creation and initialization
-- All mathematical operations
-- Matrix operations and broadcasting
-- Reduction operations and function application
-- Shape manipulation and element access
-- Neural network layer functionality
+### Test Suite Overview
 
-Run tests with:
+The test suite is designed to thoroughly validate the neural network library:
+
+- **Tensor Tests** (10 categories): Matrix operations, element access, mathematical operations, serialization
+- **Activation Function Tests** (7 categories): ReLU, Sigmoid, Tanh, Linear functions with edge cases
+- **Loss Function Tests** (7 categories): MSE, Binary/Multi-class Cross Entropy with numerical stability
+- **Dense Layer Tests** (9 categories): Forward/backward passes, gradient computation, parameter updates
+- **Integration Tests** (8 categories): End-to-end training, batch processing, gradient flow
+
+### Running Tests
 
 ```bash
-./test
+# Build and run all tests
+cd build
+cmake --build . --target test_core
+./build/test_core.exe
 ```
 
-## Author
+### Test Coverage
 
-Bartosz Roguski
+The test suite validates:
+
+#### Core Functionality
+
+- **Matrix Operations**: Addition, subtraction, multiplication, transpose
+- **Element Access**: Const/non-const operators, bounds checking
+- **Memory Management**: Object lifecycle, large tensor handling
+- **Serialization**: Vector conversion with proper storage order
+
+#### Neural Network Components
+
+- **Activation Functions**: Forward/backward passes, gradient computation
+- **Loss Functions**: All loss types with batch processing and edge cases
+- **Dense Layers**: Parameter initialization, gradient flow, weight updates
+- **Training Loop**: Multi-layer networks, convergence validation
+
+#### Edge Cases & Robustness
+
+- **Numerical Stability**: Extreme values, overflow/underflow handling
+- **Error Handling**: Dimension mismatches, invalid inputs
+- **Batch Processing**: Multiple samples, gradient accumulation
+- **Empty/Single Element**: Boundary conditions
+
+### Adding New Tests
+
+When extending the library, add corresponding tests:
+
+```cpp
+// Example test structure
+void testNewFeature() {
+    printf("\n=== Testing New Feature ===\n");
+    
+    // Setup test data
+    // Execute functionality
+    // Validate results with assertions
+    
+    printf("✓ New feature test passed\n");
+}
+```
+
+Tests should be added to the appropriate test file and included in the main test runner.
+
+## Contributing
+
+This is an academic project. Key areas for enhancement:
+
+1. **GUI Development**: Complete the Qt interface implementation
+2. **Visualization**: Add network topology and weight visualization
+3. **Performance**: Optimize matrix operations and memory usage
+4. **Features**: Add more layer types and training algorithms
+5. **Testing**: Extend test coverage for new features and GUI components
+
+## Implementation Notes
+
+### Code Style
+
+- Use modern C++ features (auto, range-based loops, smart pointers)
+- Prefer explicit over implicit (clear variable names, no magic numbers)
+- RAII for resource management
+- Early returns to reduce nesting
+
+### Error Handling
+
+- Input validation at function boundaries
+- Specific exception types with context
+- Graceful degradation where possible
+
+### Performance Considerations
+
+- Eigen3 for vectorized operations
+- Move semantics for large objects
+- Minimal copying of tensor data
+- Efficient batch processing
+
+## License
+
+This project is developed as part of Programming II coursework at Silesian University of Technology.
+
+## Troubleshooting
+
+### Common Build Issues
+
+- **Qt6 not found**: Ensure Qt6 is in your PATH or use `-DCMAKE_PREFIX_PATH=/path/to/qt6`
+- **Eigen3 missing**: Install via package manager
+
+### Runtime Issues
+
+- **Dataset loading fails**: Check that MNIST data files are available in core/data/MNIST/
+- **GUI doesn't start**: Verify Qt6 runtime libraries are available
+- **Tests fail**: Ensure all dependencies are properly linked and Eigen3 is available
+
+### Test Issues
+
+- **Assertion failures**: Check that the implementation matches expected behavior
+- **Compilation errors**: Verify all test files have correct include paths
+- **Numerical precision**: Some tests use tolerance-based comparisons (1e-10) for floating-point operations

@@ -3,19 +3,19 @@
 #include <string>
 #include <vector>
 
-#include "../nn/tensor.hpp"
+#include "../nn/Tensor.hpp"
 
 namespace data {
 
 struct DataSample {
-    Tensor features;
-    Tensor label;
+    nn::Tensor features;
+    nn::Tensor label;
 
     // Default constructor
     DataSample() = default;
 
     // Constructor with parameters
-    DataSample(const Tensor& f, const Tensor& l) : features(f), label(l) {}
+    DataSample(const nn::Tensor& f, const nn::Tensor& l) : features(f), label(l) {}
 };
 
 class Dataset {
@@ -36,12 +36,12 @@ class Dataset {
     }
 
     // Batch operations
-    virtual std::pair<Tensor, Tensor> get_batch(const std::vector<int>& indices) const;
-    virtual std::pair<Tensor, Tensor> get_batch(int start, int size) const;
+    virtual std::pair<nn::Tensor, nn::Tensor> get_batch(const std::vector<int>& indices) const;
+    virtual std::pair<nn::Tensor, nn::Tensor> get_batch(int start, int size) const;
 
     // Statistics
-    virtual Tensor compute_mean() const;
-    virtual Tensor compute_std() const;
+    virtual nn::Tensor compute_mean() const;
+    virtual nn::Tensor compute_std() const;
     virtual void normalize();
 
   protected:
@@ -49,8 +49,8 @@ class Dataset {
     std::vector<DataSample> samples_;
 
     // Normalization parameters
-    Tensor mean_;
-    Tensor std_;
+    nn::Tensor mean_;
+    nn::Tensor std_;
     bool normalized_ = false;
 };
 

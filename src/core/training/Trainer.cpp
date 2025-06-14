@@ -7,7 +7,8 @@
 
 namespace training {
 
-Trainer::Trainer(Network& network, data::Dataset& dataset) : network_(network), dataset_(dataset) {}
+Trainer::Trainer(nn::Network& network, data::Dataset& dataset)
+    : network_(network), dataset_(dataset) {}
 
 void Trainer::train(const TrainingConfig& config) {
     if (!dataset_.is_loaded()) {
@@ -107,7 +108,7 @@ void Trainer::train_epoch(const std::vector<int>& train_indices,
         auto [batch_features, batch_targets] = dataset_.get_batch(batch_indices);
 
         // Forward pass
-        Tensor predictions = network_.forward(batch_features);
+        nn::Tensor predictions = network_.forward(batch_features);
 
         // Compute loss
         double loss = network_.compute_loss(predictions, batch_targets);
@@ -117,7 +118,7 @@ void Trainer::train_epoch(const std::vector<int>& train_indices,
 
         // Backward pass
         network_.zero_gradients();
-        Tensor loss_grad = network_.compute_loss_gradient(predictions, batch_targets);
+        nn::Tensor loss_grad = network_.compute_loss_gradient(predictions, batch_targets);
         network_.backward(loss_grad);
 
         // Update weights
@@ -165,7 +166,7 @@ TrainingMetrics Trainer::evaluate(const std::vector<int>& indices, int batch_siz
         auto [batch_features, batch_targets] = dataset_.get_batch(batch_indices);
 
         // Forward pass
-        Tensor predictions = network_.forward(batch_features);
+        nn::Tensor predictions = network_.forward(batch_features);
 
         // Compute metrics
         double batch_loss = network_.compute_loss(predictions, batch_targets);
@@ -181,7 +182,7 @@ TrainingMetrics Trainer::evaluate(const std::vector<int>& indices, int batch_siz
     return TrainingMetrics(total_loss / total_samples, total_accuracy / total_samples, 0, 0);
 }
 
-double Trainer::compute_accuracy(const Tensor& predictions, const Tensor& targets) {
+double Trainer::compute_accuracy(const nn::Tensor& predictions, const nn::Tensor& targets) {
     if (predictions.rows() != targets.rows() || predictions.cols() != targets.cols()) {
         return 0.0;
     }

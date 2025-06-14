@@ -39,8 +39,8 @@ class MnistDataset : public Dataset {
 
     // Helper functions
     uint32_t read_big_endian_uint32(std::ifstream& file);
-    Tensor create_one_hot(int label, int num_classes) const;
-    Tensor normalize_image(const std::vector<uint8_t>& image_data) const;
+    nn::Tensor create_one_hot(int label, int num_classes) const;
+    nn::Tensor normalize_image(const std::vector<uint8_t>& image_data) const;
 
     // For backwards compatibility (fallback to dummy data if files not found)
     void create_dummy_data();
